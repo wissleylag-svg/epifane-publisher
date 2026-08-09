@@ -1,29 +1,33 @@
-const { runAgent } = require("../agent");
+const { shopifyGraphQL } = require("../shopify");
 
 module.exports = async function handler(req, res) {
-  if (req.method === "GET") {
-    return res.status(200).json({
-      status: "ok",
-      agent: "epifane-publisher",
-      message: "EPIFANE Publisher Agent is ready"
+  if (req.method !== "GET") {
+    return res.status(405).json({
+      error: "Method not allowed",
     });
   }
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
   try {
-    const result = await runAgent(req.body);
+    const data = await shopifyGraphQL(`
+      query GetProducts {
+        products(first: 5) {
+          nodes {
+            id
+            title
+            handle
+          }
+        }
+      }
+    `);
 
     return res.status(200).json({
       success: true,
-      product: result
+      products: data.products.nodes,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 };
