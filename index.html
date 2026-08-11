@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EPIFANE Publisher</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f4ef;
+      margin: 0;
+      padding: 30px;
+      color: #222;
+    }
+
+    .container {
+      max-width: 760px;
+      margin: auto;
+      background: white;
+      padding: 28px;
+      border-radius: 18px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      margin-top: 18px;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+
+    textarea {
+      min-height: 140px;
+      resize: vertical;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 24px;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: #1f1f1f;
+      color: white;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #status {
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 10px;
+      display: none;
+      white-space: pre-wrap;
+    }
+
+    .success {
+      display: block !important;
+      background: #e9f8ee;
+      color: #176b35;
+    }
+
+    .error {
+      display: block !important;
+      background: #fdecec;
+      color: #a52222;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>EPIFANE Publisher</h1>
+
+    <div class="subtitle">
+      Crear productos en Shopify como borrador
+    </div>
+
+    <form id="productForm">
+      <label for="title">Título del producto</label>
+      <input
+        id="title"
+        name="title"
+        type="text"
+        required
+        placeholder="Ej. Collar religioso dorado"
+      />
+
+      <label for="description">Descripción</label>
+      <textarea
+        id="description"
+        name="description"
+        placeholder="Escribe la descripción del producto"
+      ></textarea>
+
+      <button id="submitButton" type="submit">
+        Crear borrador en Shopify
+      </button>
+    </form>
+
+    <div id="status"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById("productForm");
+    const statusBox = document.getElementById("status");
+    const submitButton = document.getElementById("submitButton");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const title = document.getElementById("title").value.trim();
+      const description = document.getElementById("description").value.trim();
+
+      statusBox.className = "";
+      statusBox.style.display = "block";
+      statusBox.textContent = "Creando producto...";
+      submitButton.disabled = true;
+
+      try {
+        const response = await fetch("/api", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            title,
+            description
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || "No se pudo crear el producto.");
+        }
+
+        statusBox.className = "success";
+        statusBox.textContent =
+          "✅ Producto creado correctamente como borrador en Shopify.\n\n" +
+          "Título: " + data.product.title +
+          "\nHandle: " + data.product.handle;
+
+        form.reset();
+      } catch (error) {
+        statusBox.className = "error";
+        statusBox.textContent =
+          "❌ Error: " + error.message;
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
