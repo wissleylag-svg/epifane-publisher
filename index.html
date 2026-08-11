@@ -15,7 +15,7 @@
     }
 
     .container {
-      max-width: 760px;
+      max-width: 820px;
       margin: auto;
       background: white;
       padding: 28px;
@@ -52,13 +52,19 @@
     }
 
     textarea {
-      min-height: 140px;
+      min-height: 120px;
       resize: vertical;
+    }
+
+    .small-note {
+      font-size: 13px;
+      color: #777;
+      margin-top: 5px;
     }
 
     button {
       width: 100%;
-      margin-top: 24px;
+      margin-top: 28px;
       padding: 14px;
       border: none;
       border-radius: 10px;
@@ -105,21 +111,76 @@
     </div>
 
     <form id="productForm">
+
       <label for="title">Título del producto</label>
       <input
         id="title"
-        name="title"
         type="text"
         required
-        placeholder="Ej. Collar religioso dorado"
+        placeholder="Ej. De su mano, siempre seguro – Jesús guiando a una niña"
       />
 
       <label for="description">Descripción</label>
       <textarea
         id="description"
-        name="description"
-        placeholder="Escribe la descripción del producto"
+        placeholder="Descripción completa del producto"
       ></textarea>
+
+      <label for="vendor">Proveedor</label>
+      <input
+        id="vendor"
+        type="text"
+        placeholder="Ej. Printify"
+      />
+
+      <label for="productType">Tipo de producto</label>
+      <input
+        id="productType"
+        type="text"
+        placeholder="Ej. Canvas"
+      />
+
+      <label for="collections">Colecciones</label>
+      <input
+        id="collections"
+        type="text"
+        placeholder="Ej. Colección Arte Devocional, AVADA - Best Sellers"
+      />
+      <div class="small-note">
+        Separa varias colecciones con comas.
+      </div>
+
+      <label for="tags">Etiquetas</label>
+      <input
+        id="tags"
+        type="text"
+        placeholder="Ej. Art & Wall Decor, Canvas, Decor, Religious Art"
+      />
+      <div class="small-note">
+        Separa varias etiquetas con comas.
+      </div>
+
+      <label for="seoTitle">Título SEO</label>
+      <input
+        id="seoTitle"
+        type="text"
+        maxlength="70"
+        placeholder="Título para Google"
+      />
+
+      <label for="metaDescription">Metadescripción</label>
+      <textarea
+        id="metaDescription"
+        maxlength="160"
+        placeholder="Descripción para Google"
+      ></textarea>
+
+      <label for="handle">Identificador de URL / Handle</label>
+      <input
+        id="handle"
+        type="text"
+        placeholder="Ej. cuadro-de-su-mano-siempre-seguro"
+      />
 
       <button id="submitButton" type="submit">
         Crear borrador en Shopify
@@ -134,11 +195,31 @@
     const statusBox = document.getElementById("status");
     const submitButton = document.getElementById("submitButton");
 
+    function splitCommaValues(value) {
+      return value
+        .split(",")
+        .map(item => item.trim())
+        .filter(Boolean);
+    }
+
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
-      const title = document.getElementById("title").value.trim();
-      const description = document.getElementById("description").value.trim();
+      const payload = {
+        title: document.getElementById("title").value.trim(),
+        description: document.getElementById("description").value.trim(),
+        vendor: document.getElementById("vendor").value.trim(),
+        productType: document.getElementById("productType").value.trim(),
+        collections: splitCommaValues(
+          document.getElementById("collections").value
+        ),
+        tags: splitCommaValues(
+          document.getElementById("tags").value
+        ),
+        seoTitle: document.getElementById("seoTitle").value.trim(),
+        metaDescription: document.getElementById("metaDescription").value.trim(),
+        handle: document.getElementById("handle").value.trim()
+      };
 
       statusBox.className = "";
       statusBox.style.display = "block";
@@ -151,10 +232,7 @@
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({
-            title,
-            description
-          })
+          body: JSON.stringify(payload)
         });
 
         const data = await response.json();
@@ -172,8 +250,7 @@
         form.reset();
       } catch (error) {
         statusBox.className = "error";
-        statusBox.textContent =
-          "❌ Error: " + error.message;
+        statusBox.textContent = "❌ Error: " + error.message;
       } finally {
         submitButton.disabled = false;
       }
