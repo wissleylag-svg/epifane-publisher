@@ -336,10 +336,13 @@ loadSm5Button.addEventListener("click", () => {
 );
   
 
-  const description = getField(
-  spanishBlock,
-  "Descripción completa"
+  const descriptionMatch = spanishBlock.match(
+  /Descripción completa\s*([\s\S]*?)(?=\n\s*(?:Beneficios)\s*\n)/i
 );
+
+const description = descriptionMatch
+  ? cleanSm5Value(descriptionMatch[1])
+  : "";
 
   const vendor = getField(
     shopifyBlock,
