@@ -222,46 +222,82 @@ function cleanSm5Value(value) {
 }
 
 function getBlock(text, blockNumber) {
-  const startMarker = new RegExp(
-    `#\\s*BLOQUE\\s+${blockNumber}\\b`,
+  const regex = new RegExp(
+    `(?:^|\\n)\\s*#*\\s*BLOQUE\\s+${blockNumber}\\b[^\\n]*\\n([\\s\\S]*?)(?=\\n\\s*#*\\s*BLOQUE\\s+\\d+\\b|$)`,
     "i"
   );
 
-  const match = startMarker.exec(text);
+  const match = text.match(regex);
+  return match ? match[1].trim() : "";
+}
 
-  if (!match) return "";
+const sm5Labels = [
+  "Título del producto",
+  "Descripción corta",
+  "Descripción completa",
+  "Beneficios",
+  "Características principales",
+  "Materiales",
+  "Cuidados",
+  "SEO Title (Español)",
+  "Meta Description (Español)",
+  "URL (Handle)",
+  "ALT Español",
+  "ALT Inglés",
+  "Vendor",
+  "Product Type",
+  "Collection",
+  "Tags",
+  "Product Title",
+  "Short Description",
+  "Full Description",
+  "SEO Title",
+  "Meta Description",
+  "Image ALT"
+];
 
-  const start = match.index;
-  const remaining = text.slice(start);
-
-  const nextBlock = remaining
-    .slice(match[0].length)
-    .search(/\n#\s*BLOQUE\s+\d+\b/i);
-
-  if (nextBlock === -1) {
-    return remaining;
-  }
-
-  return remaining.slice(
-    0,
-    match[0].length + nextBlock
-  );
+function normalizeLabelLine(line) {
+  return line
+    .replace(/\*\*/g, "")
+    .replace(/:$/, "")
+    .trim();
 }
 
 function getField(block, label) {
-  const escapedLabel = label.replace(
-    /[.*+?^${}()|[\]\\]/g,
-    "\\$&"
+  const lines = block.split("\n");
+
+  let startIndex = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    if (
+      normalizeLabelLine(lines[i]).toLowerCase() ===
+      label.toLowerCase()
+    ) {
+      startIndex = i + 1;
+      break;
+    }
+  }
+
+  if (startIndex === -1) return "";
+
+  const valueLines = [];
+
+  for (let i = startIndex; i < lines.length; i++) {
+    const currentLabel = normalizeLabelLine(lines[i]);
+
+    const isNextField = sm5Labels.some(
+      item =>
+        item.toLowerCase() === currentLabel.toLowerCase()
+    );
+
+    if (isNextField) break;
+
+    valueLines.push(lines[i]);
+  }
+
+  return cleanSm5Value(
+    valueLines.join("\n")
   );
-
-  const regex = new RegExp(
-    `\\*\\*${escapedLabel}\\*\\*\\s*\\n([\\s\\S]*?)(?=\\n\\s*\\*\\*[^\\n]+\\*\\*|\\n#\\s*BLOQUE|$)`,
-    "i"
-  );
-
-  const match = block.match(regex);
-
-  return match ? cleanSm5Value(match[1]) : "";
 }
 
 function getTags(block) {
