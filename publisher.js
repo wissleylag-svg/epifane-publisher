@@ -1,8 +1,36 @@
 const { shopifyGraphQL } = require("./shopify");
-const { buildSeoFields } = require("./seo");
+
+async function findCollectionIds(collectionNames = []) {
+  if (!Array.isArray(collectionNames) || collectionNames.length === 0) {
+    return [];
+  }
+
+  const data = await shopifyGraphQL(`
+    query GetCollections {
+      collections(first: 100) {
+        nodes {
+          id
+          title
+        }
+      }
+    }
+  `);
+
+  const wanted = collectionNames.map(name =>
+    String(name).trim().toLowerCase()
+  );
+
+  return data.collections.nodes
+    .filter(collection =>
+      wanted.includes(collection.title.trim().toLowerCase())
+    )
+    .map(collection => collection.id);
+}
 
 async function publishProduct(product) {
-  const seo = buildSeoFields(product);
+  const collectionIds = await findCollectionIds(
+    product.collections || []
+  );
 
   const mutation = `
     mutation CreateProduct($product: ProductCreateInput!) {
@@ -13,11 +41,21 @@ async function publishProduct(product) {
           handle
           descriptionHtml
           status
+          vendor
+          productType
+          tags
           seo {
             title
             description
           }
+          collections(first: 20) {
+            nodes {
+              id
+              title
+            }
+          }
         }
+
         userErrors {
           field
           message
@@ -26,20 +64,47 @@ async function publishProduct(product) {
     }
   `;
 
-  const variables = {
-    product: {
-      title: product.title,
-      descriptionHtml: product.description || "",
-      handle: seo.handle,
-      seo: {
-        title: seo.seoTitle,
-        description: seo.metaDescription
-      },
-      status: "DRAFT"
-    }
+  const productInput = {
+    title: product.title,
+    descriptionHtml: product.description || "",
+    status: "DRAFT"
   };
 
-  const data = await shopifyGraphQL(mutation, variables);
+  if (product.vendor) {
+    productInput.vendor = product.vendor;
+  }
+
+  if (product.productType) {
+    productInput.productType = product.productType;
+  }
+
+  if (Array.isArray(product.tags) && product.tags.length > 0) {
+    productInput.tags = product.tags;
+  }
+
+  if (product.handle) {
+    productInput.handle = product.handle;
+  }
+
+  if (product.seoTitle || product.metaDescription) {
+    productInput.seo = {
+      title: product.seoTitle || "",
+      description: product.metaDescription || ""
+    };
+  }
+
+  if (collectionIds.length > 0) {
+    productInput.collectionsToJoin = collectionIds;
+  }
+
+  const variables = {
+    product: productInput
+  };
+
+  const data = await shopifyGraphQL(
+    mutation,
+    variables
+  );
 
   const errors = data.productCreate.userErrors;
 
