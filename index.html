@@ -109,7 +109,23 @@
     <div class="subtitle">
       Crear productos en Shopify como borrador
     </div>
+<div class="sm5-import">
+  <label for="sm5Input">Resultado completo de SM5</label>
 
+  <textarea
+    id="sm5Input"
+    placeholder="Pega aquí la ficha completa generada por SM5"
+    style="min-height:220px;"
+  ></textarea>
+
+  <button
+    type="button"
+    id="loadSm5Button"
+    style="margin-bottom:25px;"
+  >
+    Cargar ficha desde SM5
+  </button>
+</div>
     <form id="productForm">
 
       <label for="title">Título del producto</label>
@@ -194,7 +210,142 @@
     const form = document.getElementById("productForm");
     const statusBox = document.getElementById("status");
     const submitButton = document.getElementById("submitButton");
+const sm5Input = document.getElementById("sm5Input");
+const loadSm5Button = document.getElementById("loadSm5Button");
 
+function cleanSm5Value(value) {
+  return value
+    .replace(/^\s*[-•]\s*/gm, "")
+    .replace(/`/g, "")
+    .replace(/\*\*/g, "")
+    .trim();
+}
+
+function getBlock(text, blockNumber) {
+  const startMarker = new RegExp(
+    `#\\s*BLOQUE\\s+${blockNumber}\\b`,
+    "i"
+  );
+
+  const match = startMarker.exec(text);
+
+  if (!match) return "";
+
+  const start = match.index;
+  const remaining = text.slice(start);
+
+  const nextBlock = remaining
+    .slice(match[0].length)
+    .search(/\n#\s*BLOQUE\s+\d+\b/i);
+
+  if (nextBlock === -1) {
+    return remaining;
+  }
+
+  return remaining.slice(
+    0,
+    match[0].length + nextBlock
+  );
+}
+
+function getField(block, label) {
+  const escapedLabel = label.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&"
+  );
+
+  const regex = new RegExp(
+    `\\*\\*${escapedLabel}\\*\\*\\s*\\n([\\s\\S]*?)(?=\\n\\s*\\*\\*[^\\n]+\\*\\*|\\n#\\s*BLOQUE|$)`,
+    "i"
+  );
+
+  const match = block.match(regex);
+
+  return match ? cleanSm5Value(match[1]) : "";
+}
+
+function getTags(block) {
+  const tagsSection = getField(block, "Tags");
+
+  if (!tagsSection) return "";
+
+  return tagsSection
+    .split("\n")
+    .map(tag => cleanSm5Value(tag))
+    .filter(Boolean)
+    .join(", ");
+}
+
+loadSm5Button.addEventListener("click", () => {
+  const text = sm5Input.value.trim();
+
+  if (!text) {
+    statusBox.className = "error";
+    statusBox.textContent =
+      "❌ Pega primero la ficha completa de SM5.";
+    return;
+  }
+
+  const seoBlock = getBlock(text, 2);
+  const shopifyBlock = getBlock(text, 4);
+  const englishBlock = getBlock(text, 5);
+
+  const title = getField(
+    englishBlock,
+    "Product Title"
+  );
+
+  const description = getField(
+    englishBlock,
+    "Full Description"
+  );
+
+  const vendor = getField(
+    shopifyBlock,
+    "Vendor"
+  );
+
+  const productType = getField(
+    shopifyBlock,
+    "Product Type"
+  );
+
+  const collection = getField(
+    shopifyBlock,
+    "Collection"
+  );
+
+  const tags = getTags(shopifyBlock);
+
+  const seoTitle = getField(
+    englishBlock,
+    "SEO Title"
+  );
+
+  const metaDescription = getField(
+    englishBlock,
+    "Meta Description"
+  );
+
+  const handle = getField(
+    seoBlock,
+    "URL (Handle)"
+  );
+
+  document.getElementById("title").value = title;
+  document.getElementById("description").value = description;
+  document.getElementById("vendor").value = vendor;
+  document.getElementById("productType").value = productType;
+  document.getElementById("collections").value = collection;
+  document.getElementById("tags").value = tags;
+  document.getElementById("seoTitle").value = seoTitle;
+  document.getElementById("metaDescription").value = metaDescription;
+  document.getElementById("handle").value = handle;
+
+  statusBox.className = "success";
+  statusBox.textContent =
+    "✅ Ficha SM5 cargada. Revisa los campos antes de enviarla a Shopify.";
+});
     function splitCommaValues(value) {
       return value
         .split(",")
