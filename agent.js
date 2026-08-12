@@ -6,16 +6,28 @@ async function runAgent(productData) {
     throw new Error("El producto necesita un título.");
   }
 
-  const seo = buildSeoFields({
+  // Generamos SEO automático como respaldo
+  const generatedSeo = buildSeoFields({
     title: productData.title,
     description: productData.description || "",
   });
 
+  // Si tú escribiste SEO/handle en EPIFANE Publisher,
+  // se respeta. Si lo dejaste vacío, se genera automáticamente.
   const product = {
     ...productData,
-    seoTitle: seo.seoTitle,
-    metaDescription: seo.metaDescription,
-    handle: seo.handle,
+
+    seoTitle:
+      productData.seoTitle?.trim() ||
+      generatedSeo.seoTitle,
+
+    metaDescription:
+      productData.metaDescription?.trim() ||
+      generatedSeo.metaDescription,
+
+    handle:
+      productData.handle?.trim() ||
+      generatedSeo.handle,
   };
 
   return publishProduct(product);
