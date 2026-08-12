@@ -306,10 +306,14 @@ function getTags(block) {
   if (!tagsSection) return "";
 
   return tagsSection
-    .split("\n")
-    .map(tag => cleanSm5Value(tag))
-    .filter(Boolean)
-    .join(", ");
+  .split("\n")
+  .map(tag =>
+    cleanSm5Value(tag)
+      .replace(/^[*-]\s*/, "")
+      .trim()
+  )
+  .filter(Boolean)
+  .join(", ");
 }
 
 loadSm5Button.addEventListener("click", () => {
@@ -324,17 +328,18 @@ loadSm5Button.addEventListener("click", () => {
 
   const seoBlock = getBlock(text, 2);
   const shopifyBlock = getBlock(text, 4);
-  const englishBlock = getBlock(text, 5);
+  const spanishBlock = getBlock(text, 1);
 
   const title = getField(
-    englishBlock,
-    "Product Title"
-  );
+  spanishBlock,
+  "Título del producto"
+);
+  
 
   const description = getField(
-    englishBlock,
-    "Full Description"
-  );
+  spanishBlock,
+  "Descripción completa"
+);
 
   const vendor = getField(
     shopifyBlock,
@@ -354,14 +359,14 @@ loadSm5Button.addEventListener("click", () => {
   const tags = getTags(shopifyBlock);
 
   const seoTitle = getField(
-    englishBlock,
-    "SEO Title"
-  );
+  seoBlock,
+  "SEO Title (Español)"
+);
 
   const metaDescription = getField(
-    englishBlock,
-    "Meta Description"
-  );
+  seoBlock,
+  "Meta Description (Español)"
+);
 
   const handle = getField(
     seoBlock,
