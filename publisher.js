@@ -26,7 +26,66 @@ async function findCollectionIds(collectionNames = []) {
     )
     .map(collection => collection.id);
 }
+function formatDescriptionHtml(text) {
+  if (!text) return "";
 
+  const headings = new Set([
+    "Detalles del producto",
+    "Tamaños disponibles",
+    "Materiales",
+    "Nota importante",
+    "Uso recomendado"
+  ]);
+
+  const lines = text.split("\n");
+  let html = "";
+  let inList = false;
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+
+    if (!line) {
+      if (inList) {
+        html += "</ul>";
+        inList = false;
+      }
+      continue;
+    }
+
+    if (headings.has(line)) {
+      if (inList) {
+        html += "</ul>";
+        inList = false;
+      }
+
+      html += `<h3>${line}</h3>`;
+      continue;
+    }
+
+    if (/^\*\s+/.test(line)) {
+      if (!inList) {
+        html += "<ul>";
+        inList = true;
+      }
+
+      html += `<li>${line.replace(/^\*\s+/, "")}</li>`;
+      continue;
+    }
+
+    if (inList) {
+      html += "</ul>";
+      inList = false;
+    }
+
+    html += `<p>${line}</p>`;
+  }
+
+  if (inList) {
+    html += "</ul>";
+  }
+
+  return html;
+}
 async function publishProduct(product) {
   const collectionIds = await findCollectionIds(
     product.collections || []
@@ -66,7 +125,7 @@ async function publishProduct(product) {
 
   const productInput = {
     title: product.title,
-    descriptionHtml: product.description || "",
+    descriptionHtml: formatDescriptionHtml(product.description),
     status: "DRAFT"
   };
 
