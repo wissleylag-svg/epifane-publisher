@@ -1,5 +1,5 @@
 const { buildSeoFields } = require("./seo");
-const { publishProduct } = require("./publisher");
+const { publishProduct, updateProduct } = require("./publisher");
 
 async function runAgent(productData) {
   if (!productData || !productData.title) {
@@ -30,7 +30,11 @@ async function runAgent(productData) {
       generatedSeo.handle,
   };
 
-  return publishProduct(product);
+  if (product.existingHandle?.trim()) {
+  return updateProduct(product);
+}
+
+return publishProduct(product);
 }
 
 module.exports = {
