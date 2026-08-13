@@ -462,7 +462,70 @@ const description = descriptionMatch
       } finally {
         submitButton.disabled = false;
       }
+    }); 
+    updateButton.addEventListener("click", async () => {
+  const currentHandle = existingHandle.value.trim();
+
+  if (!currentHandle) {
+    statusBox.className = "error";
+    statusBox.style.display = "block";
+    statusBox.textContent =
+      "❌ Escribe el handle actual del producto que quieres editar.";
+    return;
+  }
+
+  const payload = {
+    title: document.getElementById("title").value.trim(),
+    description: document.getElementById("description").value.trim(),
+    vendor: document.getElementById("vendor").value.trim(),
+    productType: document.getElementById("productType").value.trim(),
+    collections: splitCommaValues(
+      document.getElementById("collections").value
+    ),
+    tags: splitCommaValues(
+      document.getElementById("tags").value
+    ),
+    seoTitle: document.getElementById("seoTitle").value.trim(),
+    metaDescription: document.getElementById("metaDescription").value.trim(),
+    handle: document.getElementById("handle").value.trim(),
+    existingHandle: currentHandle
+  };
+
+  statusBox.className = "";
+  statusBox.style.display = "block";
+  statusBox.textContent = "Actualizando producto...";
+  updateButton.disabled = true;
+
+  try {
+    const response = await fetch("/api", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
     });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.error || "No se pudo actualizar el producto."
+      );
+    }
+
+    statusBox.className = "success";
+    statusBox.textContent =
+      "✅ Producto actualizado correctamente en Shopify.\n\n" +
+      "Título: " + data.product.title +
+      "\nHandle: " + data.product.handle;
+
+  } catch (error) {
+    statusBox.className = "error";
+    statusBox.textContent = "❌ Error: " + error.message;
+  } finally {
+    updateButton.disabled = false;
+  }
+});
   </script>
 </body>
 </html>
