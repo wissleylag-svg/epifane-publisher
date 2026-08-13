@@ -337,7 +337,7 @@ loadSm5Button.addEventListener("click", () => {
   
 
   const descriptionMatch = spanishBlock.match(
-  /Descripción completa\s*([\s\S]*?)(?=\n\s*(?:Beneficios)\s*\n)/i
+  /\*{0,2}Descripción completa\*{0,2}\s*([\s\S]*?)(?=\n\s*\*{0,2}Beneficios\*{0,2}\s*\n)/i
 );
 
 const description = descriptionMatch
