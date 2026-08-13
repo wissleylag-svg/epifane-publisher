@@ -201,7 +201,123 @@ async function updateProduct(product) {
     );
   }
 
-  return existingProduct;
+  const collectionIds = await findCollectionIds(
+
+  product.collections || []
+
+);
+
+const updateInput = {
+
+  id: existingProduct.id,
+
+  title: product.title,
+
+  descriptionHtml: formatDescriptionHtml(product.description),
+
+  vendor: product.vendor || "",
+
+  productType: product.productType || "",
+
+  tags: Array.isArray(product.tags) ? product.tags : [],
+
+  handle: product.handle || existingProduct.handle,
+
+  seo: {
+
+    title: product.seoTitle || "",
+
+    description: product.metaDescription || ""
+
+  }
+
+};
+
+if (collectionIds.length > 0) {
+
+  updateInput.collectionsToJoin = collectionIds;
+
+}
+
+const updateMutation = `
+
+  mutation UpdateProduct($product: ProductUpdateInput!) {
+
+    productUpdate(product: $product) {
+
+      product {
+
+        id
+
+        title
+
+        handle
+
+        descriptionHtml
+
+        vendor
+
+        productType
+
+        tags
+
+        seo {
+
+          title
+
+          description
+
+        }
+
+        collections(first: 20) {
+
+          nodes {
+
+            id
+
+            title
+
+          }
+
+        }
+
+      }
+
+      userErrors {
+
+        field
+
+        message
+
+      }
+
+    }
+
+  }
+
+`;
+
+const updateData = await shopifyGraphQL(
+
+  updateMutation,
+
+  {
+
+    product: updateInput
+
+  }
+
+);
+
+const updateErrors = updateData.productUpdate.userErrors;
+
+if (updateErrors && updateErrors.length > 0) {
+
+  throw new Error(JSON.stringify(updateErrors));
+
+}
+
+return updateData.productUpdate.product;
 }
 module.exports = {
   publishProduct,
