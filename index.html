@@ -197,10 +197,21 @@
         type="text"
         placeholder="Ej. cuadro-de-su-mano-siempre-seguro"
       />
-
+      <label for="existingHandle">Handle actual del producto a editar</label>
+<input
+  id="existingHandle"
+  type="text"
+  placeholder="Ej. in-your-presence-christian-wall-art"
+/>
+<div class="small-note">
+  Solo se usa al actualizar un producto existente.
+</div>
       <button id="submitButton" type="submit">
         Crear borrador en Shopify
-      </button>
+      </button> 
+      <button id="updateButton" type="button">
+  Actualizar producto existente en Shopify
+</button>
     </form>
 
     <div id="status"></div>
@@ -209,9 +220,11 @@
   <script>
     const form = document.getElementById("productForm");
     const statusBox = document.getElementById("status");
-    const submitButton = document.getElementById("submitButton");
-const sm5Input = document.getElementById("sm5Input");
-const loadSm5Button = document.getElementById("loadSm5Button");
+    const submitButton = document.getElementById("submitButton"); 
+    const updateButton = document.getElementById("updateButton"); 
+    const existingHandle = document.getElementById("existingHandle");
+    const sm5Input = document.getElementById("sm5Input");
+    const loadSm5Button = document.getElementById("loadSm5Button");
 
 function cleanSm5Value(value) {
   return value
