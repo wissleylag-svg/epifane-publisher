@@ -173,7 +173,37 @@ async function publishProduct(product) {
 
   return data.productCreate.product;
 }
+async function updateProduct(product) {
+  const findQuery = `
+    query FindProductByHandle($identifier: ProductIdentifierInput!) {
+      productByIdentifier(identifier: $identifier) {
+        id
+        title
+        handle
+      }
+    }
+  `;
 
+  const findData = await shopifyGraphQL(
+    findQuery,
+    {
+      identifier: {
+        handle: product.existingHandle
+      }
+    }
+  );
+
+  const existingProduct = findData.productByIdentifier;
+
+  if (!existingProduct) {
+    throw new Error(
+      `No se encontró ningún producto con el handle: ${product.existingHandle}`
+    );
+  }
+
+  return existingProduct;
+}
 module.exports = {
-  publishProduct
+  publishProduct,
+  updateProduct
 };
