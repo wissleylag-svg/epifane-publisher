@@ -236,7 +236,7 @@ function cleanSm5Value(value) {
 
 function getBlock(text, blockNumber) {
   const regex = new RegExp(
-    `(?:^|\\n)\\s*#*\\s*BLOQUE\\s+${blockNumber}\\b[^\\n]*\\n([\\s\\S]*?)(?=\\n\\s*#*\\s*BLOQUE\\s+\\d+\\b|$)`,
+    `(?:^|\\n)\\s*#*\\s*\\**\\s*BLOQUE\\s+${blockNumber}\\b[^\\n]*\\**\\s*\\n([\\s\\S]*?)(?=\\n\\s*#*\\s*\\**\\s*BLOQUE\\s+\\d+\\b|$)`,
     "i"
   );
 
