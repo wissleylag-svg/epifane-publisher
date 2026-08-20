@@ -297,7 +297,9 @@ function getField(block, label) {
 
   for (let i = startIndex; i < lines.length; i++) {
     const currentLabel = normalizeLabelLine(lines[i]);
-
+if (/^\s*SM5.*\.docx\s*$/i.test(lines[i])) {
+  break;
+}
     const isNextField = sm5Labels.some(
       item =>
         item.toLowerCase() === currentLabel.toLowerCase()
