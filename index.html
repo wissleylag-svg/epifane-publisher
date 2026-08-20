@@ -235,37 +235,13 @@ function cleanSm5Value(value) {
 }
 
 function getBlock(text, blockNumber) {
-  const lines = text.split("\n");
-  const startRegex = new RegExp(
-    `^BLOQUE\\s+${blockNumber}\\b`,
+  const regex = new RegExp(
+    `(?:^|\\n)\\s*#*\\s*BLOQUE\\s+${blockNumber}\\b[^\\n]*\\n([\\s\\S]*?)(?=\\n\\s*#*\\s*BLOQUE\\s+\\d+\\b|$)`,
     "i"
   );
-  const anyBlockRegex = /^BLOQUE\s+\d+\b/i;
 
-  let collecting = false;
-  const blockLines = [];
-
-  for (const rawLine of lines) {
-    const normalized = rawLine
-      .replace(/^\s*#+\s*/, "")
-      .replace(/\*\*/g, "")
-      .trim();
-
-    if (!collecting) {
-      if (startRegex.test(normalized)) {
-        collecting = true;
-      }
-      continue;
-    }
-
-    if (anyBlockRegex.test(normalized)) {
-      break;
-    }
-
-    blockLines.push(rawLine);
-  }
-
-  return blockLines.join("\n").trim();
+  const match = text.match(regex);
+  return match ? match[1].trim() : "";
 }
 
 const sm5Labels = [
@@ -324,9 +300,6 @@ function getField(block, label) {
 if (/^\s*SM5.*\.docx\s*$/i.test(lines[i])) {
   break;
 }
-  if (/^\s*[-—–_*]{3,}\s*$/.test(lines[i])) {
-  break;
-}
     const isNextField = sm5Labels.some(
       item =>
         item.toLowerCase() === currentLabel.toLowerCase()
@@ -342,24 +315,20 @@ if (/^\s*SM5.*\.docx\s*$/i.test(lines[i])) {
   );
 }
 
-funtion getTags(block) {
+function getTags(block) {
   const tagsSection = getField(block, "Tags");
+
   if (!tagsSection) return "";
 
   return tagsSection
-    .split("\n")
-    .map(tag => cleanSm5Value(tag).trim())
-    .filter(tag => tag)
-    .filter(tag => !/^\s*SM5.*\.docx\s*$/i.test(tag))
-    .filter(tag => !/^\s*[-—–_*]{3,}\s*$/.test(tag))
-    .filter(tag => !/^BLOQUE\s+\d+/i.test(tag))
-    .map(tag =>
-      tag
-        .replace(/^[*-]\s*/, "")
-        .trim()
-    )
-    .filter(Boolean)
-    .join(", ");
+  .split("\n")
+  .map(tag =>
+    cleanSm5Value(tag)
+      .replace(/^[*-]\s*/, "")
+      .trim()
+  )
+  .filter(Boolean)
+  .join(", ");
 }
 
 loadSm5Button.addEventListener("click", () => {
