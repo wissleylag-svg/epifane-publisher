@@ -300,6 +300,9 @@ function getField(block, label) {
 if (/^\s*SM5.*\.docx\s*$/i.test(lines[i])) {
   break;
 }
+  if (/^\s*[-—–_*]{3,}\s*$/.test(lines[i])) {
+  break;
+}
     const isNextField = sm5Labels.some(
       item =>
         item.toLowerCase() === currentLabel.toLowerCase()
@@ -315,20 +318,24 @@ if (/^\s*SM5.*\.docx\s*$/i.test(lines[i])) {
   );
 }
 
-function getTags(block) {
+funtion getTags(block) {
   const tagsSection = getField(block, "Tags");
-
   if (!tagsSection) return "";
 
   return tagsSection
-  .split("\n")
-  .map(tag =>
-    cleanSm5Value(tag)
-      .replace(/^[*-]\s*/, "")
-      .trim()
-  )
-  .filter(Boolean)
-  .join(", ");
+    .split("\n")
+    .map(tag => cleanSm5Value(tag).trim())
+    .filter(tag => tag)
+    .filter(tag => !/^\s*SM5.*\.docx\s*$/i.test(tag))
+    .filter(tag => !/^\s*[-—–_*]{3,}\s*$/.test(tag))
+    .filter(tag => !/^BLOQUE\s+\d+/i.test(tag))
+    .map(tag =>
+      tag
+        .replace(/^[*-]\s*/, "")
+        .trim()
+    )
+    .filter(Boolean)
+    .join(", ");
 }
 
 loadSm5Button.addEventListener("click", () => {
